@@ -539,6 +539,8 @@ ms:
             ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
           haproxy.org/backend-config-snippet: |
             default-server sni str(rdp-proxy)
+          haproxy.org/frontend-config-snippet: |
+            http-request deny deny_status 413 if { req.body_size gt 10485760 }
         hosts:
           - host: localhost
             paths:
@@ -688,6 +690,8 @@ ms:
             ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
           haproxy.org/backend-config-snippet: |
             default-server sni str(ssh-proxy)
+          haproxy.org/frontend-config-snippet: |
+            http-request deny deny_status 413 if { req.body_size gt 10485760 }
         hosts:
           - host: localhost
             paths:
@@ -831,7 +835,7 @@ ms:
         annotations:
           haproxy.org/backend-config-snippet: |
             default-server sni str(auth)
-            http-request deny deny_status 413 if { req.body_size gt 16000 }
+            http-request deny deny_status 413 if { req.body_size gt 1048576 }
         hosts:
           - host: localhost
             paths:
@@ -2874,9 +2878,10 @@ ms:
             ssl-default-bind-ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256
             ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
           haproxy.org/frontend-config-snippet: |
-            http-request deny deny_status 413 if { req.body_size gt 16000 }
+            http-request deny deny_status 413 if { req.body_size gt 10485760 }
           haproxy.org/backend-config-snippet: |
             default-server sni str(nginx)
+            http-request deny deny_status 413 if { req.body_size gt 1048576 }
         hosts:
           - host: localhost
             paths:
