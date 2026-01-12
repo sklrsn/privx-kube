@@ -1,6 +1,13 @@
+NOTE TO MYSELF: Remember to drop the privx database after every cleanup.
+
 minikube start --driver=parallels --cpus=4 --memory=8192 --disk-size=50g
 
 docker save -o privx_images.tar $(docker images --format "{{.Repository}}:{{.Tag}}" | grep 'privxsshcom/.*:99$')
+
+helm install \
+    -f values-overrides/privx.yaml \
+    --namespace privx \
+    privx charts/privx/
 
 # Add the HAProxy Technologies Helm repo
 helm repo add haproxytech https://haproxytech.github.io/helm-charts
@@ -233,8 +240,7 @@ how to fix it, please visit the webpage mentioned above.
 
 ----
 
-/etc/haproxy/certs/ca $  curl -v --cacert /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem \
->   https://rdp-proxy.privx.svc.cluster.local:8087/rdp-proxy/api/v1/status 2>&1
+curl -v --cacert /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem https://rdp-proxy.privx.svc.cluster.local:8087/rdp-proxy/api/v1/status
 * Host rdp-proxy.privx.svc.cluster.local:8087 was resolved.
 * IPv6: (none)
 * IPv4: 10.110.241.84
