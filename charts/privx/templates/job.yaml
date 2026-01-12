@@ -78,18 +78,18 @@ spec:
               value: "{{ $env.value }}"
               {{- end}}
             {{- end}}
-          {{- if $job.useGlobalPodSecurityContext }}
-            {{- range $env := $job.environment }}
-              {{- if eq $env.name "PRIVX_USER" }}
-            - name: "{{ $env.name }}"
-              value: "{{ $globalContext.Values.podSecurityContext.runAsUser | toString }}"
-              {{- end }}
-              {{- if eq $env.name "PRIVX_GROUP" }}
-            - name: "{{ $env.name }}"
-              value: "{{ $globalContext.Values.podSecurityContext.fsGroup | toString }}"
-              {{- end }}
-            {{- end }}
-          {{- end }}
+          # {{- if $job.useGlobalPodSecurityContext }}
+          #   {{- range $env := $job.environment }}
+          #     {{- if eq $env.name "PRIVX_USER" }}
+          #   - name: "{{ $env.name }}"
+          #     value: "{{ $globalContext.Values.podSecurityContext.runAsUser | toString }}"
+          #     {{- end }}
+          #     {{- if eq $env.name "PRIVX_GROUP" }}
+          #   - name: "{{ $env.name }}"
+          #     value: "{{ $globalContext.Values.podSecurityContext.fsGroup | toString }}"
+          #     {{- end }}
+          #   {{- end }}
+          # {{- end }}
           {{- with $job.command }}
           command:
             {{- toYaml . | nindent 12 }}

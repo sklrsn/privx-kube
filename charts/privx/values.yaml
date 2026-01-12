@@ -114,11 +114,11 @@ privx:
 
 # Global value to define the PrivX images' repository.
 # Individual microservices/jobs can override this.
-privxRepository: public.ecr.aws/sshprivx
+privxRepository: privxsshcom
 
 # Global value to define the PrivX images' version tag.
 # Individual microservices/jobs can override this.
-privxVersion: "42.0"
+privxVersion: "99"
 
 # Global value to define the default image pull policy.
 # Individual microservices/jobs can override this.

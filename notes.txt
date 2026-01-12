@@ -1,0 +1,269 @@
+minikube start --driver=parallels --cpus=4 --memory=8192 --disk-size=50g
+
+docker save -o privx_images.tar $(docker images --format "{{.Repository}}:{{.Tag}}" | grep 'privxsshcom/.*:99$')
+
+# Add the HAProxy Technologies Helm repo
+helm repo add haproxytech https://haproxytech.github.io/helm-charts
+helm repo update
+
+# Install HAProxy Ingress Controller
+helm install haproxy-ingress haproxytech/kubernetes-ingress \
+  --namespace haproxy-controller \
+  --create-namespace
+
+time make build-all-images
+
+# ksaminat CA
+openssl genrsa -out ca-key.pem 4096
+openssl req -new -x509 -days 3650 -key ca-key.pem -out ca-cert.pem \
+  -subj "/CN=ksaminat CA/O=R&D/C=FI"
+openssl x509 -in ca-cert.pem -noout -text | grep -E "Subject:|Issuer:|Validity"
+
+# privx.ksaminat.com
+openssl genrsa -out server-key.pem 4096
+openssl req -new -key server-key.pem -out server.csr \
+  -subj "/CN=privx.ksaminat.com/O=R&D/C=FI"
+cat > server-ext.cnf << EOF
+subjectAltName = DNS:privx.ksaminat.com,DNS:*.privx.ksaminat.com
+EOF
+openssl x509 -req -in server.csr -CA ca-cert.pem -CAkey ca-key.pem \
+  -CAcreateserial -out server-cert.pem -days 365 \
+  -extfile server-ext.cnf
+
+openssl x509 -in server-cert.pem -noout -text | grep -E "Subject:|Issuer:|DNS:"
+
+
+  curl -v --cacert /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem \
+  https://rdp-proxy.privx.svc.cluster.local:8087/rdp-proxy/api/v1/status 2>&1
+
+
+curl -v https://rdp-proxy.privx.svc.cluster.local:8087/rdp-proxy/api/v1/status
+
+/ $ cat /etc/haproxy/haproxy.cfg | grep -A10 rdp-proxy
+backend privx_svc_rdp-proxy_http
+  mode http
+  balance roundrobin
+  option forwardfor
+  no option abortonclose
+  default-server check ssl alpn h2,http/1.1 ca-file /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem verify required
+  cookie privx-session dynamic indirect nocache insert
+  dynamic-cookie-key ohph7OoGhong
+  ###_config-snippet_### BEGIN
+  ### ingress:privx_svc_rdp-proxy_http/privx/privx-rdp-proxy-https ###
+  default-server sni str(rdp-proxy)
+  ###_config-snippet_### END
+  server SRV_1 10.244.0.35:8087 enabled
+
+curl -vvvvvv https://rdp-proxy.privx.svc.cluster.local:8087/rdp-proxy/api/v1/status
+12:37:08.396996 [0-x] == Info: [MULTI] [INIT] added to multi, mid=1, running=1, total=2
+12:37:08.397129 [0-x] == Info: [MULTI] [INIT] -> [SETUP]
+12:37:08.397177 [0-x] == Info: [MULTI] [SETUP] -> [CONNECT]
+12:37:08.397228 [0-x] == Info: [READ] client_reset, clear readers
+12:37:08.397285 [0-0] == Info: [MULTI] [CONNECT] [CPOOL] added connection 0. The cache now contains 1 members
+12:37:08.397529 [0-0] == Info: [DNS] asyn-ares: fire off getaddrinfo for A+AAAA
+12:37:08.397929 [0-0] == Info: [MULTI] [CONNECT] -> [RESOLVING]
+12:37:08.398011 [0-0] == Info: [MULTI] [RESOLVING] multi_wait pollset[fd=4 IN], timeouts=1
+12:37:08.399815 [0-0] == Info: [DNS] Curl_resolv_check() -> 0, missing
+12:37:08.399870 [0-0] == Info: [MULTI] [RESOLVING] multi_wait pollset[fd=4 IN], timeouts=1
+12:37:08.400975 [0-0] == Info: [DNS] Curl_resolv_check() -> 0, missing
+12:37:08.401060 [0-0] == Info: [MULTI] [RESOLVING] multi_wait pollset[fd=4 IN], timeouts=1
+12:37:08.401359 [0-0] == Info: [DNS] Curl_resolv_check() -> 0, missing
+12:37:08.401406 [0-0] == Info: [MULTI] [RESOLVING] multi_wait pollset[fd=4 IN], timeouts=1
+12:37:08.401754 [0-0] == Info: [DNS] asyn-ares: addrinfo callback, status=0
+12:37:08.401795 [0-0] == Info: [DNS] ares: addrinfo done, status=0, pending=0, addr=found
+12:37:08.401835 [0-0] == Info: [MULTI] [RESOLVING] Curl_multi_will_close fd=4
+12:37:08.401871 [0-0] == Info: [DNS] is_resolved() result=0, dns=found
+12:37:08.401900 [0-0] == Info: Host rdp-proxy.privx.svc.cluster.local:8087 was resolved.
+12:37:08.401939 [0-0] == Info: IPv6: (none)
+12:37:08.401956 [0-0] == Info: IPv4: 10.110.241.84
+12:37:08.401976 [0-0] == Info: [DNS] Curl_resolv_check() -> 0, found
+12:37:08.402006 [0-0] == Info: [HTTPS-CONNECT] adding wanted h2
+12:37:08.402032 [0-0] == Info: [HTTPS-CONNECT] added
+12:37:08.402055 [0-0] == Info: [MULTI] [RESOLVING] -> [CONNECTING]
+12:37:08.402082 [0-0] == Info: [HTTPS-CONNECT] connect, init
+12:37:08.402108 [0-0] == Info: [HAPPY-EYEBALLS] created ipv4 (timeout 299996ms)
+12:37:08.402141 [0-0] == Info: [HAPPY-EYEBALLS] ipv4 starting (timeout=299996ms)
+12:37:08.402186 [0-0] == Info:   Trying 10.110.241.84:8087...
+12:37:08.402217 [0-0] == Info: [TCP] cf_socket_open() -> 0, fd=4
+12:37:08.402597 [0-0] == Info: [TCP] local address 10.244.0.34 port 55802...
+12:37:08.402635 [0-0] == Info: [HAPPY-EYEBALLS] ipv4 connect -> 0, connected=0
+12:37:08.402706 [0-0] == Info: [HTTPS-CONNECT] connect -> 0, done=0
+12:37:08.402793 [0-0] == Info: [HTTPS-CONNECT] Curl_conn_connect(block=0) -> 0, done=0
+12:37:08.402834 [0-0] == Info: [TCP] adjust_pollset, !connected, POLLOUT fd=4
+12:37:08.402861 [0-0] == Info: [HAPPY-EYEBALLS] adjust_pollset -> 1 socks
+12:37:08.402887 [0-0] == Info: [HTTPS-CONNECT] adjust_pollset -> 1 socks
+12:37:08.402967 [0-0] == Info: [MULTI] [CONNECTING] multi_wait pollset[fd=4 OUT], timeouts=1
+12:37:08.403010 [0-0] == Info: [TCP] connected
+12:37:08.403030 [0-0] == Info: [HAPPY-EYEBALLS] ipv4 connect -> 0, connected=1
+12:37:08.403059 [0-0] == Info: [HAPPY-EYEBALLS] Connected to rdp-proxy.privx.svc.cluster.local (10.110.241.84) port 8087
+12:37:08.403103 [0-0] == Info: [SSL] cf_connect()
+12:37:08.403131 [0-0] == Info: [SSL] ossl_connect, step1
+12:37:08.405435 [0-0] == Info: [SSLS] find peer slot for rdp-proxy.privx.svc.cluster.local:8087:CA-/etc/ssl/cert.pem:CApath-/etc/ssl/certs:IMPL-OpenSSL/3.3.5:G among 25 slots
+12:37:08.405561 [0-0] == Info: [SSLS] peer not found for rdp-proxy.privx.svc.cluster.local:8087:CA-/etc/ssl/cert.pem:CApath-/etc/ssl/certs:IMPL-OpenSSL/3.3.5:G
+12:37:08.405655 [0-0] == Info: [SSLS] no cached session for rdp-proxy.privx.svc.cluster.local:8087:CA-/etc/ssl/cert.pem:CApath-/etc/ssl/certs:IMPL-OpenSSL/3.3.5:G
+12:37:08.405730 [0-0] == Info: ALPN: curl offers h2,http/1.1
+12:37:08.405761 [0-0] == Info: [SSL] ossl_connect, step2
+12:37:08.405971 [0-0] => Send SSL data, 5 bytes (0x5)
+0000: .....
+12:37:08.406038 [0-0] == Info: TLSv1.3 (OUT), TLS handshake, Client hello (1):
+12:37:08.406082 [0-0] => Send SSL data, 512 bytes (0x200)
+0000: ......>..@{D4Kr..........G......9s.e.z ...c..U6......|..@../_.m.
+0040: .(.G[[[.>.......,.0.........+./...$.(.k.#.'.g.....9.....3.....=.
+0080: <.5./.....u...&.$..!rdp-proxy.privx.svc.cluster.local...........
+00c0: ..............................h2.http/1.1.........1.....0.......
+0100: ..........................................+........-.....3.&.$..
+0140: . ...s.B.. h...V.K..m.E`....{...5H..............................
+0180: ................................................................
+01c0: ................................................................
+12:37:08.406719 [0-0] == Info: [TCP] send(len=517) -> 517, err=0
+12:37:08.406850 [0-0] == Info: [SSL] ossl_bio_cf_out_write(len=517) -> 517, err=0
+12:37:08.407096 [0-0] == Info: [TCP] recv(len=5) -> -1, err=81
+12:37:08.407135 [0-0] == Info: [SSL] ossl_bio_cf_in_read(len=5) -> -1, err=81
+12:37:08.407178 [0-0] == Info: [SSL] ossl_populate_x509_store, path=/etc/ssl/cert.pem, blob=0
+12:37:08.418654 [0-0] == Info:  CAfile: /etc/ssl/cert.pem
+12:37:08.418696 [0-0] == Info:  CApath: /etc/ssl/certs
+12:37:08.418722 [0-0] == Info: [SSL] SSL_connect() -> err=-1, detail=2
+12:37:08.418814 [0-0] == Info: [SSL] SSL_connect() -> want recv
+12:37:08.418877 [0-0] == Info: [SSL] cf_connect() -> 0, done=0
+12:37:08.418980 [0-0] == Info: [HTTPS-CONNECT] connect -> 0, done=0
+12:37:08.419044 [0-0] == Info: [HTTPS-CONNECT] Curl_conn_connect(block=0) -> 0, done=0
+12:37:08.419139 [0-0] == Info: [SSL] adjust_pollset, POLLIN fd=4
+12:37:08.419213 [0-0] == Info: [TCP] adjust_pollset, !active, POLLIN fd=4
+12:37:08.419285 [0-0] == Info: [HTTPS-CONNECT] adjust_pollset -> 1 socks
+12:37:08.419355 [0-0] == Info: [MULTI] [CONNECTING] multi_wait pollset[fd=4 IN], timeouts=1
+12:37:08.419452 [0-0] == Info: [SSL] cf_connect()
+12:37:08.419488 [0-0] == Info: [SSL] ossl_connect, step2
+12:37:08.419538 [0-0] == Info: [TCP] recv(len=5) -> 5, err=0
+12:37:08.419570 [0-0] == Info: [SSL] ossl_bio_cf_in_read(len=5) -> 5, err=0
+12:37:08.419639 [0-0] <= Recv SSL data, 5 bytes (0x5)
+0000: ....z
+12:37:08.419710 [0-0] == Info: [TCP] recv(len=122) -> 122, err=0
+12:37:08.419775 [0-0] == Info: [SSL] ossl_bio_cf_in_read(len=122) -> 122, err=0
+12:37:08.419852 [0-0] == Info: TLSv1.3 (IN), TLS handshake, Server hello (2):
+12:37:08.419916 [0-0] <= Recv SSL data, 122 bytes (0x7a)
+0000: ...v...tt..z.:..$....l.....Xm.L..(...% ...c..U6......|..@../_.m.
+0040: .(.G[[[......+.....3.$... ....d...G.Y."......:.+[.......#z
+12:37:08.420222 [0-0] == Info: [TCP] recv(len=5) -> 5, err=0
+12:37:08.420288 [0-0] == Info: [SSL] ossl_bio_cf_in_read(len=5) -> 5, err=0
+12:37:08.420351 [0-0] <= Recv SSL data, 5 bytes (0x5)
+0000: .....
+12:37:08.420392 [0-0] == Info: [TCP] recv(len=1) -> 1, err=0
+12:37:08.420483 [0-0] == Info: [SSL] ossl_bio_cf_in_read(len=1) -> 1, err=0
+12:37:08.420567 [0-0] == Info: [TCP] recv(len=5) -> 5, err=0
+12:37:08.420603 [0-0] == Info: [SSL] ossl_bio_cf_in_read(len=5) -> 5, err=0
+12:37:08.420670 [0-0] <= Recv SSL data, 5 bytes (0x5)
+0000: ....$
+12:37:08.420699 [0-0] == Info: [TCP] recv(len=36) -> 36, err=0
+12:37:08.420722 [0-0] == Info: [SSL] ossl_bio_cf_in_read(len=36) -> 36, err=0
+12:37:08.420774 [0-0] <= Recv SSL data, 1 bytes (0x1)
+0000: .
+12:37:08.420829 [0-0] == Info: TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+12:37:08.420882 [0-0] <= Recv SSL data, 19 bytes (0x13)
+0000: .............h2....
+12:37:08.420957 [0-0] == Info: [TCP] recv(len=5) -> 5, err=0
+12:37:08.421002 [0-0] == Info: [SSL] ossl_bio_cf_in_read(len=5) -> 5, err=0
+12:37:08.421117 [0-0] <= Recv SSL data, 5 bytes (0x5)
+0000: .....
+12:37:08.421144 [0-0] == Info: [TCP] recv(len=144) -> 144, err=0
+12:37:08.421219 [0-0] == Info: [SSL] ossl_bio_cf_in_read(len=144) -> 144, err=0
+12:37:08.421292 [0-0] <= Recv SSL data, 1 bytes (0x1)
+0000: .
+12:37:08.421395 [0-0] == Info: TLSv1.3 (IN), TLS handshake, Request CERT (13):
+12:37:08.421427 [0-0] <= Recv SSL data, 127 bytes (0x7f)
+0000: ...{..x.............................2...........................
+0040: ../.:.8.6041.0...U....PrivX TLS CA1.0...U....privx.ksaminat.com
+12:37:08.421554 [0-0] == Info: [TCP] recv(len=5) -> 5, err=0
+12:37:08.421611 [0-0] == Info: [SSL] ossl_bio_cf_in_read(len=5) -> 5, err=0
+12:37:08.421747 [0-0] <= Recv SSL data, 5 bytes (0x5)
+0000: .....
+12:37:08.421836 [0-0] == Info: [TCP] recv(len=1194) -> 1194, err=0
+12:37:08.421871 [0-0] == Info: [SSL] ossl_bio_cf_in_read(len=1194) -> 1194, err=0
+12:37:08.421939 [0-0] <= Recv SSL data, 1 bytes (0x1)
+0000: .
+12:37:08.421992 [0-0] == Info: TLSv1.3 (IN), TLS handshake, Certificate (11):
+12:37:08.422051 [0-0] <= Recv SSL data, 1177 bytes (0x499)
+0000: ...........0...0..p.......:0..%0..0...*.H........041.0...U....Pr
+0040: ivX TLS CA1.0...U....privx.ksaminat.com0...260108112854Z..280108
+0080: 112854Z0;1%0#..U....PrivX Microservice rdp-proxy1.0...U....rdp-p
+00c0: roxy0.."0...*.H.............0..........&..:........C...8SH..r...
+0100: ...t..H.+h.Gn_]j.Bx.g.....n..lU]....X.I.G....O.NS.>......Hr_..&b
+0140: .w1..A...Y..5.#.....c.......%]&vV..F.....='.A2......>.....:X..M.
+0180: D...B1.......B<YW....?occU.......P`. ....'...-^L.i...2e...sX....
+01c0: 92.eQu$........V.".n...~.Z.f3.'....<.........0..0...U...........
+0200: 0...U.%..0...+.........+.......0...U.......0.0...U......o..a..Q.
+0240: %1]g\..#.D.s0...U.#..0.......~..=....H....[v.0...U....0...rdp-pr
+0280: oxy0...*.H.............m..o.../{s...0..s'......./R3....j.*.*.[..
+02c0: /../.....x..g..U%..TNl.EfI..>|<.*i.Vp-A......W.F...$:...o....`.I
+0300: +u.....v...7.Z....j........nT~M....d{s..5......".f............F@
+0340: ..Y.K..*(..V..; }Z.^ ..;.qI....%a.....P......gOo.a......Y.'iF.z.
+0380: >...A....i"c..o.^..B~..bs.;r..[..n(#.=.........T. .\.JM.g...3V..
+03c0: .}.....V=.+.|.E...........EA.G.d...........i.....FY..Wy {....}\!
+0400: `..o.+..,...0@......*#........"..M1.F..w.yH.Q.+..[u...hQA....Y..
+0440: ..J.<q_...+6...7P87...D.v.......q..........I........dT........>.
+0480: ......+...........~.5}m..
+12:37:08.423499 [0-0] => Send SSL data, 5 bytes (0x5)
+0000: .....
+12:37:08.423570 [0-0] == Info: [TCP] send(len=7) -> 7, err=0
+12:37:08.423607 [0-0] == Info: [SSL] ossl_bio_cf_out_write(len=7) -> 7, err=0
+12:37:08.423663 [0-0] == Info: TLSv1.3 (OUT), TLS alert, unknown CA (560):
+12:37:08.423700 [0-0] => Send SSL data, 2 bytes (0x2)
+0000: .0
+12:37:08.423726 [0-0] == Info: [SSL] SSL_connect() -> err=-1, detail=1
+12:37:08.423762 [0-0] == Info: SSL certificate problem: unable to get local issuer certificate
+12:37:08.423857 [0-0] == Info: [SSL] cf_connect() -> 60, done=0
+12:37:08.423925 [0-0] == Info: [HTTPS-CONNECT] connect, all attempts failed
+12:37:08.423969 [0-0] == Info: [HTTPS-CONNECT] connect -> 60, done=0
+12:37:08.424012 [0-0] == Info: [HTTPS-CONNECT] Curl_conn_connect(block=0) -> 60, done=0
+12:37:08.424062 [0-0] == Info: [HTTPS-CONNECT] Curl_conn_connect(), filter returned 60
+12:37:08.424123 [0-0] == Info: [MULTI] [CONNECTING] multi_done: status: 60 prem: 1 done: 0
+12:37:08.424203 [0-0] == Info: [WRITE] [OUT] done
+12:37:08.424240 [0-x] == Info: [MULTI] [CONNECTING] multi_done_locked, in use=0
+12:37:08.424284 [0-0] == Info: [MULTI] [CONNECTING] multi_done, not reusing connection=0, forbid=0, close=0, premature=1, conn_multiplex=0
+12:37:08.424431 [0-0] == Info: closing connection #0
+12:37:08.425356 [0-0] == Info: [MULTI] [CONNECTING] -> [COMPLETED]
+12:37:08.425420 [0-0] == Info: [MULTI] [COMPLETED] Expire cleared
+12:37:08.425465 [0-0] == Info: [MULTI] [COMPLETED] -> [MSGSENT]
+12:37:08.425534 [0-0] == Info: [MULTI] [COMPLETED] removed from multi, mid=1, running=0, total=1
+curl: (60) SSL certificate problem: unable to get local issuer certificate
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the webpage mentioned above.
+
+----
+
+/etc/haproxy/certs/ca $  curl -v --cacert /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem \
+>   https://rdp-proxy.privx.svc.cluster.local:8087/rdp-proxy/api/v1/status 2>&1
+* Host rdp-proxy.privx.svc.cluster.local:8087 was resolved.
+* IPv6: (none)
+* IPv4: 10.110.241.84
+*   Trying 10.110.241.84:8087...
+* ALPN: curl offers h2,http/1.1
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+*  CAfile: /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem
+*  CApath: /etc/ssl/certs
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, Request CERT (13):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+* TLSv1.3 (OUT), TLS handshake, Certificate (11):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_128_GCM_SHA256 / x25519 / RSASSA-PSS
+* ALPN: server accepted h2
+* Server certificate:
+*  subject: OU=PrivX Microservice rdp-proxy; CN=rdp-proxy
+*  start date: Jan  8 11:28:54 2026 GMT
+*  expire date: Jan  8 11:28:54 2028 GMT
+*  subjectAltName does not match hostname rdp-proxy.privx.svc.cluster.local
+* SSL: no alternative certificate subject name matches target hostname 'rdp-proxy.privx.svc.cluster.local'
+* closing connection #0
+curl: (60) SSL: no alternative certificate subject name matches target hostname 'rdp-proxy.privx.svc.cluster.local'
+More details here: https://curl.se/docs/sslcerts.html
+
+---
+
+openssl s_client -connect localhost:8087
