@@ -1,0 +1,51 @@
+ingress:
+  common:
+    hosts:
+      - host: privx.ksaminat.com
+
+db:
+  # database address (required)
+  address: 10.211.55.9
+  # database port (required)
+  port: 5432
+  # database admin user name and password (required if db or admin user is to be created)
+  admin:
+    createDB: true
+    createDBUser: true
+    name: postgres
+    password: postgres
+  # database user name and password (required)
+  user:
+    name: privx
+    password: privx
+  # database name (required)
+  name: privx
+  # PrivX will not work if PostgreSQL version < 11.X. By setting skipVersionCheck
+  # to true, user confirms that the PostgreSQL server version >= 11.X.
+  # Acceptable values are true or false (case sensitive).
+  skipVersionCheck: false
+  # database ssl mode (verify-full by default. Complete list of options can be checked from the postgresql version used)
+  sslmode: disable
+  # To add multiline DB certificate for sslmode verify-full/verify-ca, use the following example format:
+  #ssllDBcertificate: |-
+  #   -----BEGIN CERTIFICATE-----
+  #   CONTENT HERE
+  #   -----END CERTIFICATE-----
+  sslDBcertificate:
+
+privx:
+  admin:
+    #admin username for PrivX UI login (required)
+    username: superuser
+    #admin password for PrivX UI login (required)
+    password: admin
+    #admin email for PrivX UI login (required)
+    email: privx@ssh.com
+
+ms:
+  licensemanager:
+    licenseCode:
+      prod:
+        enabled: true
+        value: ""
+        
