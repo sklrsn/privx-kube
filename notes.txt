@@ -386,3 +386,8 @@ openssl s_client -connect 10.244.0.20:8087 -CAfile /etc/haproxy/certs/ca/privx_p
 default-server sni str(rdp-proxy)       
 # default-server sni str(rdp-proxy) verifyhost rdp-proxy
 default-server sni str(rdp-proxy) verifyhost rdp-proxy check ssl alpn h2,http/1.1 ca-file /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem verify required
+
+
+---
+kubectl port-forward -n privx svc/ssh-mitm 2222:2222
+% ssh -p 2222 superuser@10.103.106.115 -L 5439:ec2-34-254-190-187.eu-west-1.compute.amazonaws.com:5432
