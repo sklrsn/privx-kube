@@ -45,6 +45,6 @@ privx:
 ms:
   licensemanager:
     licenseCode:
-      prod:
+      dev:
         enabled: true
         value: ""

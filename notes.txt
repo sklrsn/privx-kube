@@ -20,6 +20,12 @@ helm install haproxy-ingress haproxytech/kubernetes-ingress \
 
 time make build-all-images
 
+helm install \
+    -f values-overrides/privx.yaml \
+    --namespace privx \
+    privx charts/privx/
+
+
 # ksaminat CA
 openssl genrsa -out ca-key.pem 4096
 openssl req -new -x509 -days 3650 -key ca-key.pem -out ca-cert.pem \
@@ -273,3 +279,110 @@ More details here: https://curl.se/docs/sslcerts.html
 ---
 
 openssl s_client -connect localhost:8087
+
+----
+
+in HA proxy pod,
+
+ $ openssl s_client -connect 10.244.0.44:8087 -CAfile /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem -showcerts
+Connecting to 10.244.0.44
+CONNECTED(00000003)
+Can't use SSL_get_servername
+depth=1 OU=PrivX TLS CA, CN=privx.ksaminat.com
+verify return:1
+depth=0 OU=PrivX Microservice rdp-proxy, CN=rdp-proxy
+verify return:1
+---
+Certificate chain
+ 0 s:OU=PrivX Microservice rdp-proxy, CN=rdp-proxy
+   i:OU=PrivX TLS CA, CN=privx.ksaminat.com
+   a:PKEY: rsaEncryption, 2048 (bit); sigalg: RSA-SHA256
+   v:NotBefore: Jan 20 10:09:35 2026 GMT; NotAfter: Jan 20 10:09:35 2028 GMT
+-----BEGIN CERTIFICATE-----
+MIIEiDCCAnCgAwIBAgIILWId4PlHHDgwDQYJKoZIhvcNAQELBQAwNDEVMBMGA1UE
+CxMMUHJpdlggVExTIENBMRswGQYDVQQDExJwcml2eC5rc2FtaW5hdC5jb20wHhcN
+MjYwMTIwMTAwOTM1WhcNMjgwMTIwMTAwOTM1WjA7MSUwIwYDVQQLExxQcml2WCBN
+aWNyb3NlcnZpY2UgcmRwLXByb3h5MRIwEAYDVQQDEwlyZHAtcHJveHkwggEiMA0G
+CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQClKeTWDmsFS/J1rsj1xPMmee5twtMn
+3fAyDF7YD9HfqxzNPNRzqUz5BP5rl/GR4teT3/4SXS1WK6BjyaL2MjHAfW+W4lQt
+7i8yHnMcZpitseMHztlE9dHVrjbSM0w9I6a9WlILj6EXdUnPbinb7b0hBbq+n9Tt
+7UkBROM3vjgwwr8/pmcM4Gm4l5JWAZReEerkuXAoniW07xUcwWnweHz5fAJTM7LY
+Gktb46/6GNTR+p8xdut9mji4khACo278V+CzN5I6kDUQHWoEyB+XDbEAi2Q8lH8f
+ForMyL6DnG1sTgfPstTYHlePHHe6/224JdADkSf58eGd03EeDSSpi70FAgMBAAGj
+gZYwgZMwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEF
+BQcDAjAMBgNVHRMBAf8EAjAAMB0GA1UdDgQWBBTzkFyN7Zdur+W6y38t4SgLe6OF
+yDAfBgNVHSMEGDAWgBS7Y8pfQ78L2zKBa4G9Orx0AC6wdDAUBgNVHREEDTALggly
+ZHAtcHJveHkwDQYJKoZIhvcNAQELBQADggIBALNL3OpH8zrdtcawdO9rFekf1JNc
+otoRUmBJN37iUHZxv+Tk01oJ4y3v75Ju19b3xVHAEAGyuevM+d3/0LsfpClgkGNs
+u+Ucit7tkK8/vFM8TYrol+NKCFgEzgQ7ljheuIHqColWh0PHZC6rfsmIVAH1sAVP
+sr0V4D1VQatYbyBJ8D8MFVe0m9SKbFOPKsihHOh7IQHFwsPjQDSnBP+zkVm3WzjH
+q3QUlIIjh0EbuIjwO4WctI5lQFkIHLqH5bbtxpkMTRBM01D97qMQ1eQcoqk3GiEk
+PNjfZuqONj2Qet0EBDXuwyDRXOr2QG7o+wcWJfD3GPVCyfgE+IBC9IStYPU14xhp
+gqRQWHpFrbVfysgRLc8ttuH3E1/K0rgENMIUTGWbX7VZoZQmAVoeVLJZw6OpGNRi
+ICGggf8mOtLI3DZIR9Mczv90ULcoHGa9C3gdsiw/N+iZ0TY6a9/ZNREBAzHenB4m
+kLj2xjSLbxE7dlHnCcsHK3hzgGhvuRblZveaqc+Ayyos3iHFvvd8mgmhOooZc9Wh
+0wB4kWZpjC4KbzxZZdlZdSkVp3RT2E+gmHUpTFyMV9SSPJVUaKTLv9KNjroZ5Z5X
+unV7boK9Te+J9rG2MDinEKS4H6ZeFyHzZwH15S0YrVXKYITM7TCLAl242JARlBmA
+vrjeGGUNcKG4XjqY
+-----END CERTIFICATE-----
+---
+Server certificate
+subject=OU=PrivX Microservice rdp-proxy, CN=rdp-proxy
+issuer=OU=PrivX TLS CA, CN=privx.ksaminat.com
+---
+Acceptable client certificate CA names
+OU=PrivX TLS CA, CN=privx.ksaminat.com
+Requested Signature Algorithms: RSA-PSS+SHA256:ECDSA+SHA256:ed25519:RSA-PSS+SHA384:RSA-PSS+SHA512:ECDSA+SHA384:ECDSA+SHA512
+Shared Requested Signature Algorithms: RSA-PSS+SHA256:ECDSA+SHA256:ed25519:RSA-PSS+SHA384:RSA-PSS+SHA512:ECDSA+SHA384:ECDSA+SHA512
+Peer signing digest: SHA256
+Peer signature type: RSA-PSS
+Server Temp Key: X25519, 253 bits
+---
+SSL handshake has read 1853 bytes and written 393 bytes
+Verification: OK
+---
+New, TLSv1.3, Cipher is TLS_AES_128_GCM_SHA256
+Server public key is 2048 bit
+This TLS version forbids renegotiation.
+No ALPN negotiated
+Early data was not sent
+Verify return code: 0 (ok)
+---
+---
+Post-Handshake New Session Ticket arrived:
+SSL-Session:
+    Protocol  : TLSv1.3
+    Cipher    : TLS_AES_128_GCM_SHA256
+    Session-ID: 99B4B117F9D64CEA84B937A8634D25638F512350B81DA4DDEE5F08BE0D7B1CA1
+    Session-ID-ctx:
+    Resumption PSK: BC8BC81994E2D69334D4C38C5C63FF5FE74FF559CE62C21CC98166F49B409049
+    PSK identity: None
+    PSK identity hint: None
+    SRP username: None
+    TLS session ticket lifetime hint: 604800 (seconds)
+    TLS session ticket:
+    0000 - 4e 6e 6d 65 20 91 08 f6-c3 7d 76 23 44 b7 41 8a   Nnme ....}v#D.A.
+    0010 - 82 a7 02 6a 92 b0 c2 5c-2b b3 c9 34 af 78 c5 5e   ...j...\+..4.x.^
+    0020 - fb 0f c0 65 12 67 7f c2-2f 88 58 90 aa c1 7b 97   ...e.g../.X...{.
+    0030 - d0 31 b1 bd 4d 6c 1f bf-44 7c 9c cf 76 47 34 ab   .1..Ml..D|..vG4.
+    0040 - 7d 33 bc 7f 4f 6a 14 02-c8 be db 97 c4 92 57 aa   }3..Oj........W.
+    0050 - 83 8c 29 97 55 30 4b 69-6b da 7d c7 96 d4 b3 39   ..).U0Kik.}....9
+    0060 - ae 33 de ae 21 ec 8d 51-91                        .3..!..Q.
+
+    Start Time: 1768997549
+    Timeout   : 7200 (sec)
+    Verify return code: 0 (ok)
+    Extended master secret: no
+    Max Early Data: 0
+---
+read R BLOCK
+closed
+
+-----
+
+openssl s_client -connect 10.244.0.44:8087 -CAfile /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem -verify_return_error -verify_hostname rdp-proxy
+
+---
+default-server sni str(rdp-proxy)       
+# default-server sni str(rdp-proxy) verifyhost rdp-proxy
+default-server sni str(rdp-proxy) verifyhost rdp-proxy check ssl alpn h2,http/1.1 ca-file /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem verify required
