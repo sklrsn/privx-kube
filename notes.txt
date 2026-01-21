@@ -380,7 +380,7 @@ closed
 
 -----
 
-openssl s_client -connect 10.244.0.44:8087 -CAfile /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem -verify_return_error -verify_hostname rdp-proxy
+openssl s_client -connect 10.244.0.20:8087 -CAfile /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem -verify_return_error -verify_hostname rdp-proxy
 
 ---
 default-server sni str(rdp-proxy)       

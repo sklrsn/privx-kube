@@ -538,7 +538,7 @@ ms:
             ssl-default-bind-ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256
             ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
           haproxy.org/backend-config-snippet: |
-            default-server sni str(rdp-proxy)
+            default-server sni str(rdp-proxy) verifyhost rdp-proxy
           haproxy.org/frontend-config-snippet: |
             http-request deny deny_status 413 if { req.body_size gt 10485760 }
         hosts:
@@ -689,7 +689,7 @@ ms:
             ssl-default-bind-ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256
             ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
           haproxy.org/backend-config-snippet: |
-            default-server sni str(ssh-proxy)
+            default-server sni str(ssh-proxy) verifyhost ssh-proxy
           haproxy.org/frontend-config-snippet: |
             http-request deny deny_status 413 if { req.body_size gt 10485760 }
         hosts:
@@ -834,7 +834,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(auth)
+            default-server sni str(auth) verifyhost auth
             http-request deny deny_status 413 if { req.body_size gt 1048576 }
         hosts:
           - host: localhost
@@ -958,7 +958,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(keyvault)
+            default-server sni str(keyvault) verifyhost keyvault
         hosts:
           - host: localhost
             paths:
@@ -1080,7 +1080,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(authorizer)
+            default-server sni str(authorizer) verifyhost authorizer
         hosts:
           - host: localhost
             paths:
@@ -1105,7 +1105,7 @@ ms:
           haproxy.org/frontend-config-snippet: |
             http-request deny deny_status 413 if { req.body_size gt 1048576 }
           haproxy.org/backend-config-snippet: |
-            default-server sni str(authorizer)
+            default-server sni str(authorizer) verifyhost authorizer
         hosts:
           - host: localhost
             paths:
@@ -1228,7 +1228,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(connection-manager)
+            default-server sni str(connection-manager) verifyhost connection-manager
         hosts:
           - host: localhost
             paths:
@@ -1246,7 +1246,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(connection-manager)
+            default-server sni str(connection-manager) verifyhost connection-manager
           haproxy.org/timeout-server: "120s"
         hosts:
           - host: localhost
@@ -1373,7 +1373,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(host-store)
+            default-server sni str(host-store) verifyhost host-store
         hosts:
           - host: localhost
             paths:
@@ -1503,7 +1503,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(license-manager)
+            default-server sni str(license-manager) verifyhost license-manager
         hosts:
           - host: localhost
             paths:
@@ -1630,7 +1630,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(monitor-service)
+            default-server sni str(monitor-service) verifyhost monitor-service
         hosts:
           - host: localhost
             paths:
@@ -1649,7 +1649,7 @@ ms:
         annotations:
           haproxy.org/timeout-server: "120s"
           haproxy.org/backend-config-snippet: |
-            default-server sni str(monitor-service)
+            default-server sni str(monitor-service) verifyhost monitor-service
         hosts:
           - host: localhost
             paths:
@@ -1802,7 +1802,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(rdp-mitm)
+            default-server sni str(rdp-mitm) verifyhost rdp-mitm
         hosts:
           - host: localhost
             paths:
@@ -1954,7 +1954,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(ssh-mitm)
+            default-server sni str(ssh-mitm) verifyhost ssh-mitm
         hosts:
           - host: localhost
             paths:
@@ -2092,7 +2092,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(trail-index)
+            default-server sni str(trail-index) verifyhost trail-index
         hosts:
           - host: localhost
             paths:
@@ -2218,7 +2218,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(role-store)
+            default-server sni str(role-store) verifyhost role-store
         hosts:
           - host: localhost
             paths:
@@ -2343,7 +2343,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(settings)
+            default-server sni str(settings) verifyhost settings
         hosts:
           - host: localhost
             paths:
@@ -2466,7 +2466,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(user-store)
+            default-server sni str(user-store) verifyhost user-store
         hosts:
           - host: localhost
             paths:
@@ -2590,7 +2590,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(vault)
+            default-server sni str(vault) verifyhost vault
         hosts:
           - host: localhost
             paths:
@@ -2738,7 +2738,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(workflow-engine)
+            default-server sni str(workflow-engine) verifyhost workflow-engine
         hosts:
           - host: localhost
             paths:
@@ -2880,7 +2880,7 @@ ms:
           haproxy.org/frontend-config-snippet: |
             http-request deny deny_status 413 if { req.body_size gt 10485760 }
           haproxy.org/backend-config-snippet: |
-            default-server sni str(nginx)
+            default-server sni str(nginx) verifyhost nginx
             http-request deny deny_status 413 if { req.body_size gt 1048576 }
         hosts:
           - host: localhost
@@ -3091,7 +3091,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(network-access-manager)
+            default-server sni str(network-access-manager) verifyhost network-access-manager
         hosts:
           - host: localhost
             paths:
@@ -3214,7 +3214,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(secrets-manager)
+            default-server sni str(secrets-manager) verifyhost secrets-manager
         hosts:
           - host: localhost
             paths:
@@ -3344,7 +3344,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(extender-service)
+            default-server sni str(extender-service) verifyhost extender-service
             http-request deny deny_status 413 if { req.body_size gt 10485760 }
         hosts:
           - host: localhost
@@ -3558,7 +3558,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(db-proxy)
+            default-server sni str(db-proxy) verifyhost db-proxy
         hosts:
           - host: localhost
             paths:
@@ -3687,7 +3687,7 @@ ms:
         className: ""
         annotations:
           haproxy.org/backend-config-snippet: |
-            default-server sni str(api-proxy)
+            default-server sni str(api-proxy) verifyhost api-proxy
         hosts:
           - host: localhost
             paths:
