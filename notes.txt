@@ -380,7 +380,7 @@ closed
 
 -----
 
-openssl s_client -connect 10.244.0.20:8087 -CAfile /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem -verify_return_error -verify_hostname rdp-proxy
+openssl s_client -connect 10.97.41.125:8087 -CAfile /etc/haproxy/certs/ca/privx_proxy-ca-secret.pem -verify_return_error -verify_hostname rdp-proxy
 
 ---
 default-server sni str(rdp-proxy)       
@@ -391,3 +391,35 @@ default-server sni str(rdp-proxy) verifyhost rdp-proxy check ssl alpn h2,http/1.
 ---
 kubectl port-forward -n privx svc/ssh-mitm 2222:2222
 % ssh -p 2222 superuser@10.103.106.115 -L 5439:ec2-34-254-190-187.eu-west-1.compute.amazonaws.com:5432
+
+-- db-proxy
+
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tcp-services
+  namespace: haproxy-controller
+data:
+  "2222": "privx/ssh-mitm:2222"
+  "1080": "privx/ssh-mitm:1080"
+EOF
+
+
+kubectl patch deployment haproxy-ingress-kubernetes-ingress -n haproxy-controller --type=json -p='[
+  {
+    "op": "add",
+    "path": "/spec/template/spec/containers/0/args/-",
+    "value": "--tcp-services-configmap=haproxy-controller/tcp-services"
+  }
+]'
+
+kubectl patch svc haproxy-ingress-kubernetes-ingress -n haproxy-controller --type=json -p='[
+  {"op": "add", "path": "/spec/ports/-", "value": {"name": "ssh-mitm", "port": 2222, "targetPort": 2222, "protocol": "TCP"}},
+  {"op": "add", "path": "/spec/ports/-", "value": {"name": "socks-proxy", "port": 1080, "targetPort": 1080, "protocol": "TCP"}}
+]'
+
+kubectl rollout restart deployment -n haproxy-controller haproxy-ingress-kubernetes-ingress
+
+
+kubectl exec -n haproxy-controller haproxy-ingress-kubernetes-ingress-b7465d7bd-rt9s2 -- grep -A5 "listen.*2222\|listen.*1080" /etc/haproxy/haproxy.cfg
