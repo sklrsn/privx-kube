@@ -402,7 +402,11 @@ metadata:
   namespace: haproxy-controller
 data:
   "2222": "privx/ssh-mitm:2222"
+  "2322": "privx/extenderservice:2322"
+  "3389": "privx/rdp-mitm:3389"
   "1080": "privx/ssh-mitm:1080"
+  "8444": "privx/nginx:8444"
+  "20080": "privx/api-proxy:20080"
 EOF
 
 
@@ -417,6 +421,13 @@ kubectl patch deployment haproxy-ingress-kubernetes-ingress -n haproxy-controlle
 kubectl patch svc haproxy-ingress-kubernetes-ingress -n haproxy-controller --type=json -p='[
   {"op": "add", "path": "/spec/ports/-", "value": {"name": "ssh-mitm", "port": 2222, "targetPort": 2222, "protocol": "TCP"}},
   {"op": "add", "path": "/spec/ports/-", "value": {"name": "socks-proxy", "port": 1080, "targetPort": 1080, "protocol": "TCP"}}
+]'
+
+kubectl patch svc haproxy-ingress-kubernetes-ingress -n haproxy-controller --type=json -p='[
+  {"op": "add", "path": "/spec/ports/-", "value": {"name": "extenderservice", "port": 2322, "targetPort": 2322, "protocol": "TCP"}},
+  {"op": "add", "path": "/spec/ports/-", "value": {"name": "rdp-mitm", "port": 3389, "targetPort": 3389, "protocol": "TCP"}},
+  {"op": "add", "path": "/spec/ports/-", "value": {"name": "nginx-ssl", "port": 8444, "targetPort": 8444, "protocol": "TCP"}},
+  {"op": "add", "path": "/spec/ports/-", "value": {"name": "api-proxy", "port": 20080, "targetPort": 20080, "protocol": "TCP"}}
 ]'
 
 kubectl rollout restart deployment -n haproxy-controller haproxy-ingress-kubernetes-ingress
