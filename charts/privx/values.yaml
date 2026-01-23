@@ -13,6 +13,7 @@ ingress:
     hosts:
       - host: localhost
     annotations:
+      haproxy.org/check-interval: "1m"
       haproxy.org/server-ssl: "true"
       haproxy.org/server-ca: "privx/proxy-ca-secret"
       haproxy.org/cookie-persistence: "privx-session"
@@ -531,6 +532,7 @@ ms:
         useCommonAnnotations: false
         className: ""
         annotations:
+          haproxy.org/check-interval: "1m"
           haproxy.org/server-ssl: "true"
           haproxy.org/server-ca: "privx/proxy-ca-secret"
           haproxy.org/cookie-persistence: "privx-session"
@@ -682,6 +684,7 @@ ms:
         useCommonAnnotations: false
         className: ""
         annotations:
+          haproxy.org/check-interval: "1m"
           haproxy.org/server-ssl: "true"
           haproxy.org/server-ca: "privx/proxy-ca-secret"
           haproxy.org/cookie-persistence: "privx-session"
@@ -1096,6 +1099,7 @@ ms:
         useCommonAnnotations: false
         className: ""
         annotations:
+          haproxy.org/check-interval: "1m"
           haproxy.org/server-ssl: "true"
           haproxy.org/server-ca: "privx/proxy-ca-secret"
           haproxy.org/cookie-persistence: "privx-session"
@@ -2871,6 +2875,7 @@ ms:
         useCommonHost: true
         className: ""
         annotations:
+          haproxy.org/check-interval: "1m"
           haproxy.org/server-ssl: "true"
           haproxy.org/server-ca: "privx/proxy-ca-secret"
           haproxy.org/cookie-persistence: "privx-session"
